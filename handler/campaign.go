@@ -59,3 +59,50 @@ func (h *campaignHandler) CreateCampaign(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 
 }
+
+func (h *campaignHandler) UpdateCampaign(c *gin.Context) {
+	var input campaign.CreateCampaignInput
+
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{
+			"error": errors,
+		}
+		response := helper.APIResponse("Update Campaign Failed", http.StatusBadRequest, "error", errorMessage)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+	var uri campaign.UpdateCampaignID
+	err = c.ShouldBindUri(&uri)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{
+			"error": errors,
+		}
+		response := helper.APIResponse("Update Campaign Failed", http.StatusBadRequest, "error", errorMessage)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+	updatedCampaign, err := h.campaignService.UpdateCampaign(input, uri.ID)
+	if err != nil {
+		errorMessage := gin.H{
+			"error": "Update gagal",
+		}
+		response := helper.APIResponse("Update Campaign Failed", http.StatusBadRequest, "error", errorMessage)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+	user := c.MustGet("currentUser").(user.User)
+	if updatedCampaign.UserID != user.ID {
+		errorMessage := gin.H{
+			"error": "Unauthorized",
+		}
+		response := helper.APIResponse("Update Campaign Failed", http.StatusUnauthorized, "error", errorMessage)
+		c.JSON(http.StatusUnauthorized, response)
+		return
+	}
+	formatCampaign := campaign.FormatCampaign(updatedCampaign)
+	response := helper.APIResponse("Update Campaign Berhasil", http.StatusOK, "success", formatCampaign)
+	c.JSON(http.StatusOK, response)
+}

@@ -8,6 +8,7 @@ import (
 type Service interface {
 	GetCampaigns(ID int) ([]Campaign, error)
 	CreateCampaign(input CreateCampaignInput) (Campaign, error)
+	UpdateCampaign(input CreateCampaignInput, ID int) (Campaign, error)
 }
 
 type service struct {
@@ -54,4 +55,23 @@ func (s *service) CreateCampaign(input CreateCampaignInput) (Campaign, error) {
 		return NewCampaign, err
 	}
 	return NewCampaign, nil
+}
+
+func (s *service) UpdateCampaign(input CreateCampaignInput, ID int) (Campaign, error) {
+	campaign, err := s.repository.FindById(ID)
+	if err != nil {
+		return campaign, err
+	}
+	campaign.Name = input.Name
+	campaign.ShortDescription = input.ShortDescription
+	campaign.Description = input.Description
+	campaign.GoalAmount = input.GoalAmount
+	campaign.Perks = input.Perks
+
+	UpdatedCampaign, err := s.repository.Update(campaign)
+	if err != nil {
+		return UpdatedCampaign, err
+	}
+
+	return campaign, nil
 }
