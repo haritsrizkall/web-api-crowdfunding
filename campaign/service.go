@@ -1,14 +1,17 @@
 package campaign
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
 
 type Service interface {
 	GetCampaigns(ID int) ([]Campaign, error)
+	GetCampaignByID(ID int) (Campaign, error)
 	CreateCampaign(input CreateCampaignInput) (Campaign, error)
 	UpdateCampaign(input CreateCampaignInput, ID int) (Campaign, error)
+	CreateImageCampaign(input CreateImageCampaignInput, fileLocation string) (CampaignImage, error)
 }
 
 type service struct {
@@ -33,7 +36,14 @@ func (s *service) GetCampaigns(ID int) ([]Campaign, error) {
 		return campaigns, err
 	}
 	return campaigns, nil
+}
 
+func (s *service) GetCampaignByID(ID int) (Campaign, error) {
+	campaign, err := s.repository.FindById(ID)
+	if err != nil {
+		return campaign, err
+	}
+	return campaign, nil
 }
 
 func (s *service) CreateCampaign(input CreateCampaignInput) (Campaign, error) {
@@ -74,4 +84,37 @@ func (s *service) UpdateCampaign(input CreateCampaignInput, ID int) (Campaign, e
 	}
 
 	return campaign, nil
+}
+
+func (s *service) CreateImageCampaign(input CreateImageCampaignInput, fileLocation string) (CampaignImage, error) {
+	campaign, err := s.repository.FindById(input.CampaignID)
+	if err != nil {
+		return CampaignImage{}, err
+	}
+	if input.User.ID != campaign.UserID {
+		return CampaignImage{}, errors.New("Unauthorized")
+	}
+	isPrimary := 0
+	if input.IsPrimary {
+		_, err := s.repository.MarkAllIsPrimaryFalse(input.CampaignID)
+		if err != nil {
+			return CampaignImage{}, err
+		}
+		isPrimary = 1
+	}
+
+	campaignImage := CampaignImage{
+		CampaignID: input.CampaignID,
+		FileName:   fileLocation,
+		IsPrimary:  isPrimary,
+	}
+
+	NewcampaignImage, err := s.repository.SaveCampaignImage(campaignImage)
+
+	if err != nil {
+		return NewcampaignImage, err
+	}
+
+	return NewcampaignImage, nil
+
 }
