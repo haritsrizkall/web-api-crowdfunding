@@ -7,7 +7,6 @@ import (
 	"bwastartup/helper"
 	"bwastartup/transaction"
 	"bwastartup/user"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -42,13 +41,6 @@ func main() {
 	userHandler := handler.NewUserHandler(userService, authService)
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 	transactionHandler := handler.NewTransactionHandler(transactionService, campaignService)
-
-	transactions, err := transactionRepository.GetByUserID(16)
-	if err != nil {
-		fmt.Print(err.Error())
-	} else {
-		fmt.Println(transactions)
-	}
 
 	router := gin.Default()
 	api := router.Group("/api/v1")

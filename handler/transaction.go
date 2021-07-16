@@ -79,3 +79,26 @@ func (h *transactionHandler) GetTransactionsByUserID(c *gin.Context) {
 	c.JSON(response.Meta.Code, response)
 
 }
+
+func (h *transactionHandler) CreateTransaction(c *gin.Context) {
+	var input transaction.CreateTransactionInput
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		errors := helper.FormatValidationError(err)
+		errorMessage := gin.H{
+			"error": errors,
+		}
+		response := helper.APIResponse("Get Campaign Transactions Failed", http.StatusUnprocessableEntity, "error", errorMessage)
+		c.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+	newTransaction, err := h.transactionService.CreateTransaction(input)
+	if err != nil {
+		response := helper.APIResponse("Transaction Failed", http.StatusBadRequest, "error", nil)
+		c.JSON(response.Meta.Code, response)
+		return
+	}
+
+	response := helper.APIResponse("Transaction Success", http.StatusOK, "success", newTransaction)
+	c.JSON(response.Meta.Code, response)
+}
