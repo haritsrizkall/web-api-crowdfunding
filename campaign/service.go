@@ -18,6 +18,7 @@ type service struct {
 	repository Repository
 }
 
+// tambah user
 func NewService(repository Repository) *service {
 	return &service{repository}
 }
